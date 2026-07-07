@@ -1,7 +1,8 @@
-# 验收清单：博彩决策助手
+# 验收清单：博彩决策助手（本期：仅后端）
 
 > 验收人按本文档逐项执行。**任何一项不通过即返工**，返工后重新走完整清单。
 > 数值容差：概率/比例类 `1e-4`，金额类 `±0.01`，组合凯利收敛值 `±0.002`。
+> 本期只实现并验收后端 API；D 节前端验收挂起，待用户自研前端完成后再启用。
 
 ## A. 工程质量（一票否决项）
 
@@ -10,13 +11,14 @@
 - [ ] A3 `cargo clippy --workspace --all-targets -- -D warnings` 零警告
 - [ ] A4 `cargo fmt --check` 通过
 - [ ] A5 计算逻辑全部位于 `crates/core`，`server` 内无公式实现（人工 review）
-- [ ] A6 无数据库依赖、无 HTTP 客户端依赖、前端无 CDN 外链（检查 Cargo.toml 与 index.html）
+- [ ] A6 无数据库依赖、无 HTTP 客户端依赖、无前端嵌入依赖（rust-embed 等），检查两个 Cargo.toml
 
 ## B. 服务行为
 
 - [ ] B1 直接运行产物，终端打印 `博彩决策助手已启动：http://127.0.0.1:8787`
-- [ ] B2 浏览器打开 `http://127.0.0.1:8787` 能看到 5 个 Tab 的中文界面
+- [ ] B2 `curl localhost:8787/` 返回 200 与一段中文纯文本提示（说明这是 API 服务）
 - [ ] B3 `PORT=9000` 启动时监听 9000
+- [ ] B3a 响应头带 CORS 允许任意来源（`curl -si -H "Origin: http://localhost:5173" localhost:8787/api/kelly ...` 能看到 `access-control-allow-origin`），保证用户将来单独开发的前端可跨端口调用
 - [ ] B4 非法输入返回 HTTP 422 + 中文 error，例如：
   ```
   curl -s -X POST localhost:8787/api/kelly -H "Content-Type: application/json" -d '{"odds":2.5,"p":1.5,"bankroll":1000,"fraction":0.5}'
@@ -67,7 +69,7 @@
 
 输入 odds=2.0, p=0.45, stake=100：ev=−10.00, positive_ev=false。
 
-## D. 前端人工验收
+## D. 前端人工验收（本期挂起 — 前端由用户自研，完成后再启用本节）
 
 - [ ] D1 5 个 Tab 均可切换且对应功能可用，文案全中文
 - [ ] D2 凯利 Tab：输入 C1 第 1 行数据，界面显示绿色「有优势」卡片与 83.33；输入第 3 行数据显示红色「不该下」且金额为 0
@@ -78,4 +80,4 @@
 
 ## E. 验收产出
 
-验收人（Claude）执行完 A–E 后输出验收报告：逐项 ✅/❌，❌ 项附复现命令与期望/实际值，交 Codex 返工。全部 ✅ 后本期 MVP 关闭。
+验收人（Claude）执行完 A–C 后输出验收报告：逐项 ✅/❌，❌ 项附复现命令与期望/实际值，交 Codex 返工。A–C 全部 ✅ 后本期后端 MVP 关闭；D 节留待前端完成后单独验收。
