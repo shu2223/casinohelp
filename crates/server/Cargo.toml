@@ -1,0 +1,14 @@
+[package]
+name = "lucky-tools-server"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+axum.workspace = true
+lucky-tools-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
