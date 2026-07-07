@@ -1,18 +1,24 @@
 /** @type {import('next').NextConfig} */
 
-// Rust 后端地址：所有 /api/* 请求都代理到它。
-// 用环境变量 RUST_BACKEND_URL 可覆盖（例如后端跑在其他端口/机器时）。
+const isStaticExport = process.env.CF_PAGES === "1" || process.env.NEXT_OUTPUT === "export"
+
+// 本地 Next dev 使用 rewrite 代理到 Rust 后端。
+// Cloudflare Pages 静态导出时，浏览器通过 NEXT_PUBLIC_API_BASE_URL 直连 Fly 后端。
 const backend = process.env.RUST_BACKEND_URL ?? "http://127.0.0.1:8787"
 
-const nextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backend}/api/:path*`,
+const nextConfig = isStaticExport
+  ? {
+      output: "export",
+    }
+  : {
+      async rewrites() {
+        return [
+          {
+            source: "/api/:path*",
+            destination: `${backend}/api/:path*`,
+          },
+        ]
       },
-    ]
-  },
-}
+    }
 
 export default nextConfig

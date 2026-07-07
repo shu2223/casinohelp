@@ -1,6 +1,8 @@
-// 调用本地 API 路由；出错时抛出后端返回的中文错误消息。
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "")
+
+// 调用 Rust API；生产静态部署时可通过 NEXT_PUBLIC_API_BASE_URL 指向 Fly 后端。
 export async function postApi<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
