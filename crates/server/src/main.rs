@@ -162,8 +162,8 @@ async fn odds_convert(Json(request): Json<OddsConvertRequest>) -> ApiResult<Odds
 }
 
 async fn vig(Json(request): Json<VigRequest>) -> ApiResult<VigResult> {
-    if !(2..=3).contains(&request.odds.len()) {
-        return Err(ApiError::new("去水计算赔率数量必须是 2 或 3 个"));
+    if request.odds.len() < 2 {
+        return Err(ApiError::new("去水计算至少需要 2 个结果"));
     }
     for (index, odds) in request.odds.iter().enumerate() {
         validate_odds_for_index(*odds, index)?;

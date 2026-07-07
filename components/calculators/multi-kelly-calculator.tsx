@@ -10,13 +10,14 @@ import {
   Select,
   Stat,
   SubmitButton,
+  TextInput,
 } from "@/components/ui/primitives"
 
-type Row = { odds: string; p: string }
+type Row = { label: string; odds: string; p: string }
 
 const DEFAULT_ROWS: Row[] = [
-  { odds: "2.5", p: "0.5" },
-  { odds: "2.1", p: "0.55" },
+  { label: "比赛 1", odds: "2.5", p: "0.5" },
+  { label: "比赛 2", odds: "2.1", p: "0.55" },
 ]
 
 export function MultiKellyCalculator() {
@@ -33,7 +34,7 @@ export function MultiKellyCalculator() {
 
   function addRow() {
     if (rows.length >= 10) return
-    setRows((prev) => [...prev, { odds: "", p: "" }])
+    setRows((prev) => [...prev, { label: `比赛 ${prev.length + 1}`, odds: "", p: "" }])
   }
 
   function removeRow(index: number) {
@@ -47,7 +48,7 @@ export function MultiKellyCalculator() {
     setError("")
     try {
       const data = await postApi<MultiKellyResult>("/api/kelly/multi", {
-        bets: rows.map((row) => ({ odds: Number(row.odds), p: Number(row.p) })),
+        bets: rows.map((row) => ({ label: row.label, odds: Number(row.odds), p: Number(row.p) })),
         bankroll: Number(bankroll),
         fraction: Number(fraction),
       })
@@ -76,9 +77,17 @@ export function MultiKellyCalculator() {
             </button>
           </div>
           {rows.map((row, index) => (
-            <div key={index} className="flex items-end gap-2 rounded-lg border border-border bg-background/40 p-3">
-              <div className="flex-1">
-                <label className="mb-1 block text-xs text-muted-foreground">第 {index + 1} 场赔率</label>
+            <div key={index} className="grid gap-3 rounded-lg border border-border bg-background/40 p-3 sm:grid-cols-[1.2fr_1fr_1fr_auto] sm:items-end">
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">名称</label>
+                <TextInput
+                  value={row.label}
+                  onChange={(e) => updateRow(index, "label", e.target.value)}
+                  placeholder={`第 ${index + 1} 场`}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">小数赔率</label>
                 <NumberInput
                   step="0.01"
                   value={row.odds}
@@ -86,7 +95,7 @@ export function MultiKellyCalculator() {
                   placeholder="赔率"
                 />
               </div>
-              <div className="flex-1">
+              <div>
                 <label className="mb-1 block text-xs text-muted-foreground">胜率</label>
                 <NumberInput
                   step="0.01"
@@ -99,7 +108,7 @@ export function MultiKellyCalculator() {
                 type="button"
                 onClick={() => removeRow(index)}
                 disabled={rows.length <= 2}
-                aria-label={`删除第 ${index + 1} 场`}
+                aria-label={`删除${row.label || `第 ${index + 1} 场`}`}
                 className="h-11 rounded-md border border-border px-3 text-sm text-muted-foreground transition-colors hover:border-negative hover:text-negative disabled:opacity-40"
               >
                 删除
@@ -150,7 +159,7 @@ export function MultiKellyCalculator() {
                 <tbody className="font-mono">
                   {result.allocations.map((a) => (
                     <tr key={a.index} className="border-t border-border">
-                      <td className="px-3 py-2 font-sans">第 {a.index + 1} 场</td>
+                      <td className="px-3 py-2 font-sans">{a.label}</td>
                       <td className="px-3 py-2 text-right text-positive">{formatPercent(a.kelly_fraction)}</td>
                       <td className="px-3 py-2 text-right text-muted-foreground">{formatPercent(a.naive_kelly)}</td>
                       <td className="px-3 py-2 text-right">{formatNumber(a.stake)}</td>
