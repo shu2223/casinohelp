@@ -149,10 +149,9 @@ async fn multi_kelly(Json(request): Json<MultiKellyRequest>) -> ApiResult<MultiK
     )))
 }
 
-async fn odds_convert(
-    Json(request): Json<OddsConvertRequest>,
-) -> ApiResult<OddsConversionResult> {
-    let format = parse_odds_format(&request.format).map_err(|error| ApiError::new(error.message))?;
+async fn odds_convert(Json(request): Json<OddsConvertRequest>) -> ApiResult<OddsConversionResult> {
+    let format =
+        parse_odds_format(&request.format).map_err(|error| ApiError::new(error.message))?;
     let value = match request.value {
         JsonOddsValue::Number(number) => OddsValue::Number(number),
         JsonOddsValue::Text(text) => OddsValue::Text(text),
@@ -190,7 +189,12 @@ async fn ev(Json(request): Json<EvRequest>) -> ApiResult<EvResult> {
         return Err(ApiError::new("长期注数必须大于 0"));
     }
 
-    Ok(Json(calculate_ev(request.odds, request.p, request.stake, n)))
+    Ok(Json(calculate_ev(
+        request.odds,
+        request.p,
+        request.stake,
+        n,
+    )))
 }
 
 fn validate_probability(value: f64) -> Result<(), ApiError> {

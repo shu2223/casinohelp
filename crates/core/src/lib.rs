@@ -154,7 +154,11 @@ pub fn calculate_multi_kelly(bets: &[BetInput], bankroll: f64, fraction: f64) ->
 
     let naive: Vec<f64> = bets
         .iter()
-        .map(|bet| calculate_kelly(bet.odds, bet.p, bankroll, 1.0).kelly_fraction.max(0.0))
+        .map(|bet| {
+            calculate_kelly(bet.odds, bet.p, bankroll, 1.0)
+                .kelly_fraction
+                .max(0.0)
+        })
         .collect();
     let fractions = optimize_multi_kelly(bets, &naive);
 
@@ -534,7 +538,11 @@ fn best_fraction(value: f64) -> String {
     }
 
     let divisor = gcd(best_numerator, best_denominator);
-    format!("{}/{}", best_numerator / divisor, best_denominator / divisor)
+    format!(
+        "{}/{}",
+        best_numerator / divisor,
+        best_denominator / divisor
+    )
 }
 
 fn gcd(mut a: u64, mut b: u64) -> u64 {
@@ -664,7 +672,11 @@ mod tests {
             0.166_667,
             MULTI_TOLERANCE,
         );
-        assert_close(result.allocations[1].kelly_fraction, 0.0, PROPORTION_TOLERANCE);
+        assert_close(
+            result.allocations[1].kelly_fraction,
+            0.0,
+            PROPORTION_TOLERANCE,
+        );
     }
 
     #[test]
@@ -706,11 +718,8 @@ mod tests {
 
     #[test]
     fn c3_convert_fractional_text() {
-        let result = convert_odds(
-            OddsFormat::Fractional,
-            OddsValue::Text("3/2".to_string()),
-        )
-        .unwrap();
+        let result =
+            convert_odds(OddsFormat::Fractional, OddsValue::Text("3/2".to_string())).unwrap();
         assert_close(result.decimal, 2.5, PROPORTION_TOLERANCE);
     }
 
