@@ -15,10 +15,12 @@ impl CalculationError {
     }
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BetInput {
     pub odds: f64,
     pub p: f64,
+    #[serde(default)]
+    pub label: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -34,6 +36,7 @@ pub struct KellyResult {
 #[derive(Debug, Clone, Serialize)]
 pub struct MultiKellyAllocation {
     pub index: usize,
+    pub label: String,
     pub kelly_fraction: f64,
     pub stake: f64,
     pub naive_kelly: f64,
@@ -167,6 +170,13 @@ pub fn calculate_multi_kelly(bets: &[BetInput], bankroll: f64, fraction: f64) ->
         .enumerate()
         .map(|(index, &kelly_fraction)| MultiKellyAllocation {
             index,
+            label: bets[index]
+                .label
+                .as_deref()
+                .filter(|label| !label.trim().is_empty())
+                .map(str::trim)
+                .map(ToOwned::to_owned)
+                .unwrap_or_else(|| default_match_label(index)),
             kelly_fraction,
             stake: bankroll * kelly_fraction * fraction,
             naive_kelly: naive[index],
@@ -181,6 +191,10 @@ pub fn calculate_multi_kelly(bets: &[BetInput], bankroll: f64, fraction: f64) ->
         total_stake,
         note: "已做联合优化，总仓位低于逐场单注凯利之和".to_string(),
     }
+}
+
+fn default_match_label(index: usize) -> String {
+    format!("第 {} 场", index + 1)
 }
 
 pub fn parse_odds_format(format: &str) -> Result<OddsFormat, CalculationError> {
@@ -262,7 +276,7 @@ pub fn convert_odds(
 }
 
 pub fn calculate_vig(odds: &[f64], labels: Option<&[String]>) -> VigResult {
-    debug_assert!(odds.len() == 2 || odds.len() == 3);
+    debug_assert!(odds.len() >= 2);
     for odd in odds {
         debug_assert!(*odd > 1.0);
     }
@@ -623,20 +637,37 @@ mod tests {
 
     #[test]
     fn c2_multi_single_matches_single_kelly() {
-        let result = calculate_multi_kelly(&[BetInput { odds: 2.5, p: 0.5 }], 1000.0, 1.0);
+        let result = calculate_multi_kelly(
+            &[BetInput {
+                odds: 2.5,
+                p: 0.5,
+                label: None,
+            }],
+            1000.0,
+            1.0,
+        );
         assert_close(
             result.allocations[0].kelly_fraction,
             0.166_667,
             PROPORTION_TOLERANCE,
         );
         assert_close(result.allocations[0].stake, 166.67, MONEY_TOLERANCE);
+        assert_eq!(result.allocations[0].label, "第 1 场");
     }
 
     #[test]
     fn c2_multi_two_identical_bets_are_symmetric_and_lower_than_naive() {
         let bets = [
-            BetInput { odds: 2.5, p: 0.5 },
-            BetInput { odds: 2.5, p: 0.5 },
+            BetInput {
+                odds: 2.5,
+                p: 0.5,
+                label: None,
+            },
+            BetInput {
+                odds: 2.5,
+                p: 0.5,
+                label: None,
+            },
         ];
         let result = calculate_multi_kelly(&bets, 1000.0, 1.0);
         assert_close(
@@ -663,10 +694,20 @@ mod tests {
     #[test]
     fn c2_multi_zeroes_non_positive_edge_bet() {
         let bets = [
-            BetInput { odds: 2.5, p: 0.5 },
-            BetInput { odds: 1.8, p: 0.5 },
+            BetInput {
+                odds: 2.5,
+                p: 0.5,
+                label: Some("主胜".to_string()),
+            },
+            BetInput {
+                odds: 1.8,
+                p: 0.5,
+                label: Some("冷门小注".to_string()),
+            },
         ];
         let result = calculate_multi_kelly(&bets, 1000.0, 1.0);
+        assert_eq!(result.allocations[0].label, "主胜");
+        assert_eq!(result.allocations[1].label, "冷门小注");
         assert_close(
             result.allocations[0].kelly_fraction,
             0.166_667,
@@ -755,6 +796,26 @@ mod tests {
     fn c4_vig_arbitrage_market_gets_note() {
         let result = calculate_vig(&[2.2, 2.2], None);
         assert_eq!(result.note.as_deref(), Some("赔率组合存在套利空间"));
+    }
+
+    #[test]
+    fn c4_vig_supports_custom_outcome_count() {
+        let odds = [2.0, 3.0, 4.0, 6.0];
+        let result = calculate_vig(&odds, None);
+
+        assert_eq!(result.outcomes.len(), 4);
+        assert_eq!(result.outcomes[3].label, "结果4");
+        assert_close(result.overround, 0.25, PROPORTION_TOLERANCE);
+        assert_close(
+            result.outcomes[0].true_probability,
+            0.4,
+            PROPORTION_TOLERANCE,
+        );
+        assert_close(
+            result.outcomes[3].true_probability,
+            0.133_333,
+            PROPORTION_TOLERANCE,
+        );
     }
 
     #[test]

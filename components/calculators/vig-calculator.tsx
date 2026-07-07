@@ -7,24 +7,28 @@ import { ErrorText, NumberInput, Stat, SubmitButton, TextInput } from "@/compone
 
 type Outcome = { label: string; odds: string }
 
-const TWO_WAY: Outcome[] = [
-  { label: "主胜", odds: "1.9" },
-  { label: "客胜", odds: "1.95" },
-]
-const THREE_WAY: Outcome[] = [
+const INITIAL_ROWS: Outcome[] = [
   { label: "主胜", odds: "2.10" },
   { label: "平局", odds: "3.40" },
   { label: "客胜", odds: "3.60" },
 ]
 
 export function VigCalculator() {
-  const [rows, setRows] = useState<Outcome[]>(THREE_WAY)
+  const [rows, setRows] = useState<Outcome[]>(INITIAL_ROWS)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [result, setResult] = useState<VigResult | null>(null)
 
   function updateRow(index: number, key: keyof Outcome, value: string) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, [key]: value } : row)))
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, { label: `结果${prev.length + 1}`, odds: "" }])
+  }
+
+  function removeRow(index: number) {
+    setRows((prev) => (prev.length <= 2 ? prev : prev.filter((_, i) => i !== index)))
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -48,28 +52,14 @@ export function VigCalculator() {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">结果数量：{rows.length}</span>
           <button
             type="button"
-            onClick={() => setRows(TWO_WAY)}
-            className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-              rows.length === 2
-                ? "border-ring bg-muted text-foreground"
-                : "border-border text-muted-foreground hover:border-ring"
-            }`}
+            onClick={addRow}
+            className="h-9 rounded-md border border-border px-3 text-sm text-foreground transition-colors hover:border-ring"
           >
-            两项盘
-          </button>
-          <button
-            type="button"
-            onClick={() => setRows(THREE_WAY)}
-            className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-              rows.length === 3
-                ? "border-ring bg-muted text-foreground"
-                : "border-border text-muted-foreground hover:border-ring"
-            }`}
-          >
-            三项盘
+            + 新增结果
           </button>
         </div>
 
@@ -87,6 +77,16 @@ export function VigCalculator() {
                 onChange={(e) => updateRow(index, "odds", e.target.value)}
               />
             </div>
+            <button
+              type="button"
+              aria-label={`删除第 ${index + 1} 个结果`}
+              title="删除结果"
+              onClick={() => removeRow(index)}
+              disabled={rows.length <= 2}
+              className="h-11 w-11 shrink-0 rounded-md border border-border text-lg text-muted-foreground transition-colors hover:border-negative hover:text-negative disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ×
+            </button>
           </div>
         ))}
 

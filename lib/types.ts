@@ -2,7 +2,7 @@
 // 这里只有类型声明，没有任何计算逻辑——所有计算由 Rust 后端完成，
 // Next 通过 next.config.mjs 的 rewrites 把 /api/* 代理过去。
 
-export type BetInput = { odds: number; p: number }
+export type BetInput = { odds: number; p: number; label?: string }
 
 export type KellyResult = {
   edge: number
@@ -15,6 +15,7 @@ export type KellyResult = {
 
 export type MultiKellyAllocation = {
   index: number
+  label: string
   kelly_fraction: number
   stake: number
   naive_kelly: number

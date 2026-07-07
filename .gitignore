@@ -10,3 +10,5 @@
 next-env.d.ts
 *.tsbuildinfo
 .env*.local
+.next-dev.*
+.server.*

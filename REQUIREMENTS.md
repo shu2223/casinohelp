@@ -100,7 +100,10 @@
 **请求**：
 ```json
 {
-  "bets": [ { "odds": 2.5, "p": 0.5 }, { "odds": 2.1, "p": 0.55 } ],
+  "bets": [
+    { "label": "主胜 vs A", "odds": 2.5, "p": 0.5 },
+    { "label": "客胜 vs B", "odds": 2.1, "p": 0.55 }
+  ],
   "bankroll": 1000.0,
   "fraction": 1.0
 }
@@ -110,8 +113,8 @@
 ```json
 {
   "allocations": [
-    { "index": 0, "kelly_fraction": 0.152, "stake": 152.0, "naive_kelly": 0.166667 },
-    { "index": 1, "kelly_fraction": 0.135, "stake": 135.0, "naive_kelly": 0.140909 }
+    { "index": 0, "label": "主胜 vs A", "kelly_fraction": 0.152, "stake": 152.0, "naive_kelly": 0.166667 },
+    { "index": 1, "label": "客胜 vs B", "kelly_fraction": 0.135, "stake": 135.0, "naive_kelly": 0.140909 }
   ],
   "total_fraction": 0.287,
   "total_stake": 287.0,
@@ -162,7 +165,7 @@
 - 公平赔率 `fairᵢ = 1/pᵢ`
 
 **请求**：`{ "odds": [2.10, 3.40, 3.60], "labels": ["主胜", "平局", "客胜"] }`
-（`odds` 长度 2 或 3；`labels` 可选，缺省用「结果1/结果2/结果3」）
+（`odds` 长度至少 2；`labels` 可选，缺省用「结果1/结果2/…」）
 
 **响应**：
 ```json
