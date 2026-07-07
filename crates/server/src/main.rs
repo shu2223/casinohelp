@@ -22,6 +22,11 @@ struct ErrorResponse {
     error: String,
 }
 
+#[derive(Debug, Serialize)]
+struct HealthResponse {
+    status: &'static str,
+}
+
 #[derive(Debug)]
 struct ApiError {
     message: String,
@@ -94,11 +99,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = env::var("PORT")
         .ok()
         .and_then(|value| value.parse::<u16>().ok())
-        .unwrap_or(8787);
-    let address = SocketAddr::from(([127, 0, 0, 1], port));
+        .unwrap_or(8080);
+    let address = SocketAddr::from(([0, 0, 0, 0], port));
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/health", get(health))
         .route("/api/kelly", post(kelly))
         .route("/api/kelly/multi", post(multi_kelly))
         .route("/api/odds/convert", post(odds_convert))
@@ -107,7 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(CorsLayer::permissive());
 
     let listener = tokio::net::TcpListener::bind(address).await?;
-    println!("博彩决策助手已启动：http://127.0.0.1:{port}");
+    println!("博彩决策助手已启动：http://0.0.0.0:{port}");
     axum::serve(listener, app).await?;
 
     Ok(())
@@ -115,6 +121,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn root() -> &'static str {
     "博彩决策助手 API 服务已运行。请通过 /api/ 前缀调用 JSON 接口。"
+}
+
+async fn health() -> Json<HealthResponse> {
+    Json(HealthResponse { status: "ok" })
 }
 
 async fn kelly(Json(request): Json<KellyRequest>) -> ApiResult<KellyResult> {

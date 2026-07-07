@@ -1,48 +1,23 @@
-# syntax = docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
-# Adjust NODE_VERSION as desired
-ARG NODE_VERSION=22.21.1
-FROM node:${NODE_VERSION}-slim AS base
+FROM rust:1-bookworm AS build
 
-LABEL fly_launch_runtime="Next.js"
-
-# Next.js app lives here
 WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
 
-# Set production environment
-ENV NODE_ENV="production"
+RUN cargo build --release -p lucky-tools-server
 
+FROM debian:bookworm-slim
 
-# Throw-away build stage to reduce size of final image
-FROM base AS build
+WORKDIR /app
+ENV PORT=8080
 
-# Install packages needed to build node modules
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
+RUN apt-get update -qq \
+    && apt-get install --no-install-recommends -y ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install node modules
-COPY package-lock.json package.json ./
-RUN npm ci --include=dev
+COPY --from=build /app/target/release/lucky-tools-server /usr/local/bin/lucky-tools-server
 
-# Copy application code
-COPY . .
-
-# Build application
-RUN npx next build --experimental-build-mode compile
-
-# Remove development dependencies
-RUN npm prune --omit=dev
-
-
-# Final stage for app image
-FROM base
-
-# Copy built application
-COPY --from=build /app /app
-
-# Entrypoint sets up the container.
-ENTRYPOINT [ "/app/docker-entrypoint.js" ]
-
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+EXPOSE 8080
+CMD ["/usr/local/bin/lucky-tools-server"]
