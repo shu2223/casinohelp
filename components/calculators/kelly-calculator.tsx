@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { KellyResult } from "@/lib/betting"
+import type { KellyResult } from "@/lib/types"
 import { formatNumber, formatPercent, postApi } from "@/lib/api"
 import {
   ErrorText,

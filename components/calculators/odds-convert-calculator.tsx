@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { OddsConversionResult, OddsFormat } from "@/lib/betting"
+import type { OddsConversionResult, OddsFormat } from "@/lib/types"
 import { formatNumber, formatPercent, postApi } from "@/lib/api"
 import {
   ErrorText,

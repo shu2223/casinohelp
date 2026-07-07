@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { VigResult } from "@/lib/betting"
+import type { VigResult } from "@/lib/types"
 import { formatNumber, formatPercent, postApi } from "@/lib/api"
 import { ErrorText, NumberInput, Stat, SubmitButton, TextInput } from "@/components/ui/primitives"
 
