@@ -6,6 +6,7 @@ import { MultiKellyCalculator } from "@/components/calculators/multi-kelly-calcu
 import { OddsConvertCalculator } from "@/components/calculators/odds-convert-calculator"
 import { VigCalculator } from "@/components/calculators/vig-calculator"
 import { EvCalculator } from "@/components/calculators/ev-calculator"
+import { PolymarketAnalyzer } from "@/components/calculators/polymarket-analyzer"
 
 const TABS = [
   { id: "kelly", label: "凯利计算", desc: "该不该下？下多少？" },
@@ -13,6 +14,7 @@ const TABS = [
   { id: "convert", label: "赔率转换", desc: "六种盘口互转与隐含概率" },
   { id: "vig", label: "去水计算", desc: "剥离庄家抽水看真实概率" },
   { id: "ev", label: "期望值", desc: "EV、回报率与长期波动" },
+  { id: "polymarket", label: "Polymarket 盘口", desc: "抓取盘口·分析排名·一键建议注额" },
 ] as const
 
 type TabId = (typeof TABS)[number]["id"]
@@ -59,6 +61,7 @@ export function BettingTool() {
         {active === "convert" && <OddsConvertCalculator />}
         {active === "vig" && <VigCalculator />}
         {active === "ev" && <EvCalculator />}
+        {active === "polymarket" && <PolymarketAnalyzer />}
       </section>
     </div>
   )

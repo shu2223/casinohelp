@@ -1,5 +1,7 @@
 use std::{env, net::SocketAddr};
 
+mod polymarket;
+
 use axum::{
     extract::Json,
     http::StatusCode,
@@ -28,14 +30,23 @@ struct HealthResponse {
 }
 
 #[derive(Debug)]
-struct ApiError {
+pub(crate) struct ApiError {
     message: String,
+    status: StatusCode,
 }
 
 impl ApiError {
     fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
+            status: StatusCode::UNPROCESSABLE_ENTITY,
+        }
+    }
+
+    pub(crate) fn with_status(status: StatusCode, message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            status,
         }
     }
 }
@@ -43,7 +54,7 @@ impl ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         (
-            StatusCode::UNPROCESSABLE_ENTITY,
+            self.status,
             Json(ErrorResponse {
                 error: self.message,
             }),
@@ -110,6 +121,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/odds/convert", post(odds_convert))
         .route("/api/vig", post(vig))
         .route("/api/ev", post(ev))
+        .route("/api/polymarket/markets", get(polymarket::markets))
+        .route("/api/polymarket/estimate", post(polymarket::estimate))
+        .route("/api/polymarket/analyze", post(polymarket::analyze))
         .layer(CorsLayer::permissive());
 
     let listener = tokio::net::TcpListener::bind(address).await?;

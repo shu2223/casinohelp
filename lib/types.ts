@@ -67,3 +67,57 @@ export type EvResult = {
   long_run: { n: number; expected_profit: number; std_dev: number }
   positive_ev: boolean
 }
+
+export type PolymarketMarket = {
+  id: string
+  question: string
+  description?: string
+  outcomes: string[]
+  prices: number[]
+  decimal_odds: number[]
+  fair_probabilities: number[]
+  best_bid?: number
+  best_ask?: number
+  spread?: number
+  volume: number
+  liquidity: number
+  end_date?: string
+}
+
+export type PolymarketMarketsResponse = {
+  category: string
+  limit: number
+  markets: PolymarketMarket[]
+}
+
+export type PolymarketEstimateOutcome = {
+  label: string
+  p: number
+  reason: string
+}
+
+export type PolymarketEstimateResponse = {
+  model: string
+  outcomes: PolymarketEstimateOutcome[]
+  confidence: number
+  note: string
+}
+
+export type PolymarketAnalyzeItem = {
+  rank: number
+  index: number
+  label: string
+  odds: number
+  p: number
+  edge: number
+  kelly_fraction: number
+  stake: number
+  ev: number
+  should_bet: boolean
+  verdict: string
+}
+
+export type PolymarketAnalyzeResponse = {
+  ranked: PolymarketAnalyzeItem[]
+  total_stake: number
+}
